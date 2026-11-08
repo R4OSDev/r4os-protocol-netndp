@@ -1,0 +1,17 @@
+R4OS_MODULE_MANIFEST=2
+KIND=R4P
+NAME=NETNDP
+VERSION=0.1.0
+LANGUAGE=Zig
+SDK_PROFILE=r4os-zig-r4p-generation2
+SOURCE=src/main.zig
+TARGET=/R4OS/PROTOCOLS/NETNDP.R4P
+IMAGE_SCOPE=slim
+IMPORT=R4DEV:Query2:2
+META=r4p.name=NETNDP
+META=r4p.role=net.ndp
+META=r4p.category=net
+META=module.name=R4P_NETNDP
+META=description=IPv6 neighbor discovery and neighbor state
+META=feature=dispatch
+META=r4p.dep=net.icmpv6

@@ -1,0 +1,36 @@
+﻿NETNDP Anbieter
+================
+
+Rolle: net.ndp. IPv6 neighbor discovery and neighbor state.
+
+Besitz und Operationsvertrag
+---------------------------
+
+Der normative Plattformvertrag liegt im R4OS-Workspace unter
+Repositories/Contract/API/Ipv6Providers.txt. module.R4MF ist die Wahrheit
+fuer Version, SDK-Profil, Imports, Abhaengigkeiten und Imageziel. Der
+gepinnte SDK-Stand liefert ausschliesslich den ausgewaehlten Plattformvertrag.
+
+Dieser Anbieter besitzt8 Linkidentitaeten und64 Nachbarn sowie die
+Validierung von ND. Pruefsummen kommen vom deklarierten ICMPv6-Anbieter;
+Adress-/Router-/Praefixvorschlaege werden ausschliesslich beim IPv6-Besitzer
+angewendet. RA liefert hoechstens8 ganze Praefixoptionen oder Capacity.
+
+INCOMPLETE/REACHABLE/STALE/DELAY/PROBE binden echte Interface-/Clockepochen.
+Nur bestaetigte Probe-TX erhoeht den Zaehler: maximal3, DELAY5 Sekunden,
+Reachable zufaellig aus der bestehenden Entropiequelle. Fehlende Entropie
+verhindert zeitgebundene Arbeit, aber nicht das Laden des Anbieters.
+Unaufgeforderte NA allokiert nicht; Capacity verdraengt keine fremde
+laufende Aufloesung. Clockwechsel fuehrt nicht zum Umbasieren von Deadlines.
+
+Build und Qualifikation
+-----------------------
+
+Linux: ./Build.sh beziehungsweise ./Build.sh test. Windows: Build.bat
+beziehungsweise Build.bat test. Die Komponententests pruefen reine Besitzer-
+und Wirefaelle. Kontrollierter Gast/Peer und reale NIC-/IRQ-/DMAeigenschaften
+brauchen eigene Belege; ein Hosttest beweist keine Hardwarefaehigkeit.
+
+Die TCP-/UDP-/DNS-Endpunktfaehigkeit folgt nicht aus diesen Paket-/
+Codecoperationen. Anwendungen, bestehende Imports und Bedienablaeufe
+werden durch diesen Anbieter nicht migriert.

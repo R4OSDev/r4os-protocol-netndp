@@ -1,0 +1,7 @@
+﻿NETNDP provenance
+=====================
+
+New original R4OS provider implementation for 0.90.32.
+No frozen legacy implementation was copied into this provider.
+Wire formats are implemented from the primary IETF specifications cited
+in the documentation; no third-party implementation is bundled.

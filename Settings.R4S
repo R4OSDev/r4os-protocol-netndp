@@ -1,0 +1,7 @@
+﻿# Location-only workspace mapping. Values start at this repository.
+SDK_ROOT=../../SDK
+CONTRACT_ROOT=../../Contract
+DEVKIT_ROOT=../../../DevKit
+ARTIFACTS_ROOT=../../../Artifacts/Modules/NetNdp
+ZIG_ROOT=Toolchains/Zig
+LIBRARIES_ROOT=../../Libraries
