@@ -1,6 +1,7 @@
 const std = @import("std");
 const sdk = @import("r4os");
 const a = sdk.abi;
+const native = sdk.native_protocol_view;
 const wire = @import("wire.zig");
 const neighbors = @import("neighbors.zig");
 var api: ?sdk.technical2.Protocol = null;
@@ -33,10 +34,14 @@ export fn ndp_query(out: *a.ProtocolStatus) callconv(.c) i32 {
     return 0;
 }
 fn store(comptime T: type, value: *const T, output: *a.ProtocolBuffer) i32 {
-    if (output.data == null or output.capacity < @sizeOf(T)) return a.network_error_capacity;
-    const bytes: [*]u8 = @ptrCast(output.data.?);
+    // This copied transport permits unaligned storage. Only the local T has
+    // native alignment; the validated byte loan remains within dispatch.
+    var policy = native.Policy.versioned(T, 1, .output, .exact);
+    policy.alignment = 1;
+    const address = native.admit(output, policy, .output) catch return a.network_error_capacity;
+    const bytes: [*]u8 = @ptrFromInt(address);
     @memcpy(bytes[0..@sizeOf(T)], std.mem.asBytes(value));
-    output.len = @sizeOf(T);
+    native.publish(output, policy, @sizeOf(T)) catch return a.network_error_invalid;
     return 0;
 }
 fn event(value: wire.Event) a.NdpEvent {
@@ -78,7 +83,10 @@ export fn ndp_dispatch(op: u32, input: *const a.ProtocolBuffer, output: *a.Proto
     if (input.data == null or input.len != @sizeOf(a.NdpRequest)) return a.network_error_invalid;
     if (output.data == null or output.capacity < @sizeOf(a.NdpEvent)) return a.network_error_capacity;
     var request: a.NdpRequest = undefined;
-    const bytes: [*]const u8 = @ptrCast(input.data.?);
+    var input_policy = native.Policy.versioned(a.NdpRequest, 1, .input, .exact);
+    input_policy.alignment = 1; // copied byte transport, no unaligned native cast
+    const input_address = native.admit(input, input_policy, .input) catch return a.network_error_invalid;
+    const bytes: [*]const u8 = @ptrFromInt(input_address);
     @memcpy(std.mem.asBytes(&request), bytes[0..@sizeOf(a.NdpRequest)]);
     if (request.version != 1 or request.size != @sizeOf(a.NdpRequest) or request.reserved != 0 or request.reserved1 != 0 or request.interface_id == 0 or request.generation == 0 or request.clock_generation == 0 or request.bytes > 1500 or !std.mem.allEqual(u8, request.payload[request.bytes..], 0)) return a.network_error_invalid;
     if (op != a.ndp_op_link_reset) {

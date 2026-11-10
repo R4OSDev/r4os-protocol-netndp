@@ -1,6 +1,7 @@
 //! ND syntax only. The caller first verifies the complete ICMPv6 checksum.
 //! Parsing is transactional: no neighbor/address state changes on an error.
 const std = @import("std");
+const cursor = @import("r4os").binary_cursor;
 pub const Address = [16]u8;
 pub const Mac = [6]u8;
 pub const Error = error{ Invalid, Capacity, Unsupported };
@@ -52,7 +53,8 @@ fn same(x: Address, y: Address) bool {
     return std.mem.eql(u8, &x, &y);
 }
 fn be32(bytes: []const u8) u32 {
-    return std.mem.readInt(u32, bytes[0..4], .big);
+    var reader = cursor.Reader.init(bytes) catch unreachable;
+    return reader.readInt(u32, .big) catch unreachable;
 }
 pub fn parse(source: Address, destination: Address, hop: u32, fragmented: bool, bytes: []const u8) Error!Event {
     if (fragmented or hop != 255 or bytes.len < 8 or bytes[1] != 0 or multicast(source) or zero(destination)) return error.Invalid;
@@ -67,7 +69,7 @@ pub fn parse(source: Address, destination: Address, hop: u32, fragmented: bool, 
         134 => {
             if (bytes.len < 16 or !linkLocal(source) or multicast(destination) and !same(destination, all_nodes)) return error.Invalid;
             event.target = source;
-            event.router_lifetime = std.mem.readInt(u16, bytes[6..8], .big);
+            event.router_lifetime = be16(bytes[6..8]);
             event.reachable_ms = be32(bytes[8..12]);
             event.retransmit_ms = be32(bytes[12..16]);
             options = 16;
@@ -135,4 +137,9 @@ pub fn parse(source: Address, destination: Address, hop: u32, fragmented: bool, 
         options += length;
     }
     return event;
+}
+
+fn be16(bytes: []const u8) u16 {
+    var reader = cursor.Reader.init(bytes) catch unreachable;
+    return reader.readInt(u16, .big) catch unreachable;
 }
